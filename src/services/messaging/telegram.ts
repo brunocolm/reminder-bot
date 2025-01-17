@@ -1,6 +1,6 @@
-const sendTelegramMessage = (chatId, message) => {
+export const sendTelegramMessage = async (chatId: number, message: string): Promise<string> => {
   const BASE_URL = `https://api.telegram.org/bot${process.env.TELEGRAM_API_KEY}`;
-  const response = fetch(BASE_URL + "/sendMessage", {
+  const response = await fetch(BASE_URL + "/sendMessage", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -15,4 +15,4 @@ const sendTelegramMessage = (chatId, message) => {
   return message;
 };
 
-module.exports = sendTelegramMessage;
+

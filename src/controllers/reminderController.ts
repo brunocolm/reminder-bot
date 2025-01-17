@@ -1,6 +1,8 @@
-const { validateMessageBody, processReminderMessage } = require("../utils/handlers");
+import { Request, Response } from "express";
+import { validateMessageBody, processReminderMessage } from "../utils/handlers"
 
-const createReminder = async (req, res) => {
+
+export const createReminder = async (req: Request, res: Response): Promise<any> => {
   try {
     const validationError = validateMessageBody(req.body);
 
@@ -16,5 +18,3 @@ const createReminder = async (req, res) => {
     return res.status(500).send("Internal Server Error");
   }
 };
-
-module.exports = { createReminder };

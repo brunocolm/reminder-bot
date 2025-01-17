@@ -1,8 +1,17 @@
-const schedule = require("node-schedule");
-const { getDateAndReminder, sendMessage } = require("../middleware");
+import schedule from "node-schedule";
+import { getDateAndReminder, sendMessage } from "../middleware";
+
+interface MessageBody {
+  message: {
+    text: string,
+    chat: {
+      id: number
+    }
+  }
+}
 
 //Validates data is valid. (e.g.: {message: {text:"Message text", chat: {id:1 }}} )
-const validateMessageBody = (body) => {
+export const validateMessageBody = (body: MessageBody): string | null => {
   if (!body.message) {
     return "Bad Request: Missing message object";
   }
@@ -22,8 +31,8 @@ const validateMessageBody = (body) => {
   return null; // Return null if validation passes
 };
 
-const parseDate = (ISODate) => {
-  return new Date(ISODate).toLocaleDateString("en-GB", {
+const parseDate = (date: string | Date) => {
+  return new Date(date).toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -31,23 +40,23 @@ const parseDate = (ISODate) => {
   });
 };
 
-const reminderCallback = (chatId, ISODate, reminder) => {
-  const date=parseDate(ISODate)
-  const message = `${date}Reminder!!\n${reminder}`;
-  sendMessage(chatId,message)
+const reminderCallback = (chatId: number, date: string | Date, reminder: string) => {
+  const parsedDate = parseDate(date)
+  const message = `${parsedDate} Reminder!!\n${reminder}`;
+  sendMessage(chatId, message)
 };
 
-const scheduleReminder = (chatId, ISODate, reminder) => {
+const scheduleReminder = (chatId: number, ISODate: string, reminder: string): "success" | "error" => {
   const job = schedule.scheduleJob(ISODate, function () {
     reminderCallback(chatId, new Date(), reminder);
   });
-  
+
   if (!job) return "error";
 
   return "success";
 };
 
-const processReminderMessage = async (chatId, userMessage) => {
+export const processReminderMessage = async (chatId: number, userMessage: string) => {
   const [ISODate, reminder] = await getDateAndReminder(userMessage);
   const reminderStatus = scheduleReminder(chatId, ISODate, reminder);
 
@@ -60,10 +69,6 @@ const processReminderMessage = async (chatId, userMessage) => {
   const date = parseDate(ISODate);
   const botMessage = `Reminder created: ${date}\n${reminder}`;
 
-  sendMessage(chatId,botMessage)
+  sendMessage(chatId, botMessage)
 };
 
-module.exports = {
-  validateMessageBody,
-  processReminderMessage,
-};

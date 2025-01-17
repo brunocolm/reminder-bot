@@ -1,6 +1,7 @@
-require('dotenv').config();
-const express = require("express");
-const routes = require("./routes");
+
+import 'dotenv/config';
+import express from "express";
+import routes from "./routes";
 
 const app = express();
 app.use(express.json());
@@ -8,7 +9,8 @@ app.use(express.json());
 app.use("/", routes);
 
 const PORT = process.env.PORT || 4040;
-app.listen(PORT, (err) => {
+
+app.listen(PORT, (err: any) => {
   if (err) {
     console.error("Error starting server:", err);
   } else {
@@ -16,4 +18,4 @@ app.listen(PORT, (err) => {
   }
 });
 
-module.exports = app;
+export default app;
