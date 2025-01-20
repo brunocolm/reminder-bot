@@ -57,18 +57,27 @@ const scheduleReminder = (chatId: number, ISODate: string, reminder: string): "s
 };
 
 export const processReminderMessage = async (chatId: number, userMessage: string) => {
-  const [ISODate, reminder] = await getDateAndReminder(userMessage);
-  const reminderStatus = scheduleReminder(chatId, ISODate, reminder);
+  try {
+    const [ISODate, reminder] = await getDateAndReminder(userMessage);
+    if (ISODate === "" || reminder === "") {
+      const err = `Couldn't detect date or reminder`;
+      console.log(err);
+      return err;
+    }
+    const reminderStatus = scheduleReminder(chatId, ISODate, reminder);
 
-  if (reminderStatus === "error") {
-    const err = `There was an error generating your reminder. Date: ${ISODate}. Reminder: ${reminder}`;
-    console.log(err);
-    return err;
+    if (reminderStatus === "error") {
+      const err = `There was an error generating your reminder. Date: ${ISODate}. Reminder: ${reminder}`;
+      console.log(err);
+      return err;
+    }
+
+    const date = parseDate(ISODate);
+    const botMessage = `Reminder created: ${date}\n${reminder}`;
+
+    sendMessage(chatId, botMessage)
+  } catch (e: any) {
+    console.log("Error processing reminder:", e.message);
+    throw new Error(e)
   }
-
-  const date = parseDate(ISODate);
-  const botMessage = `Reminder created: ${date}\n${reminder}`;
-
-  sendMessage(chatId, botMessage)
 };
-

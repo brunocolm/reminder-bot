@@ -14,11 +14,11 @@ export const createReminder = async (req: Request, res: Response): Promise<any> 
     const { text, chat } = req.body.message;
     console.log("Text: ", text)
     console.log("Chat: ", chat)
-    const reminderResponse = processReminderMessage(chat.id, text);
+    const reminderResponse = await processReminderMessage(chat.id, text);
     console.log("Reminder response: ", reminderResponse)
     return res.send(reminderResponse);
-  } catch (error) {
-    console.error("Error in POST request:", error);
+  } catch (error:any) {
+    console.log("Error in create reminder:", error.message);
     return res.status(500).send("Internal Server Error");
   }
 };

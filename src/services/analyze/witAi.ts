@@ -73,7 +73,8 @@ const parseWitResponse = (witResponse: WitResponse): [string, string] => {
     .join(" and ");
 
   if (!reminderDate || !reminder) {
-    throw new Error("Couldn't parse wit.ai response")
+    console.error("Couldn't parse wit.ai response")
+    return ["",""]
   }
 
   return [reminderDate, reminder];
