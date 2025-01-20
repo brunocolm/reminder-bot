@@ -3,6 +3,7 @@ import { validateMessageBody, processReminderMessage } from "../utils/handlers.j
 
 
 export const createReminder = async (req: Request, res: Response): Promise<any> => {
+  console.log("Create reminder request body: ", req.body)
   try {
     const validationError = validateMessageBody(req.body);
 
@@ -11,7 +12,10 @@ export const createReminder = async (req: Request, res: Response): Promise<any> 
     }
 
     const { text, chat } = req.body.message;
+    console.log("Text: ", text)
+    console.log("Chat: ", chat)
     const reminderResponse = processReminderMessage(chat.id, text);
+    console.log("Reminder response: ", reminderResponse)
     return res.send(reminderResponse);
   } catch (error) {
     console.error("Error in POST request:", error);
