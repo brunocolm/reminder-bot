@@ -1,5 +1,5 @@
-import { getDateAndReminderWitAi } from "../services/analyze/witAi";
-import { sendTelegramMessage } from "../services/messaging/telegram";
+import { getDateAndReminderWitAi } from "../services/analyze/witAi.js";
+import { sendTelegramMessage } from "../services/messaging/telegram.js";
 
 enum ANALYZE_SERVICE {
   WIT_AI = "WIT_AI"

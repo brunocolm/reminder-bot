@@ -1,5 +1,5 @@
 import schedule from "node-schedule";
-import { getDateAndReminder, sendMessage } from "../middleware";
+import { getDateAndReminder, sendMessage } from "../middleware/index.js";
 
 interface MessageBody {
   message: {

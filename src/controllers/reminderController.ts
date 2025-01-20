@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { validateMessageBody, processReminderMessage } from "../utils/handlers"
+import { validateMessageBody, processReminderMessage } from "../utils/handlers.js"
 
 
 export const createReminder = async (req: Request, res: Response): Promise<any> => {
