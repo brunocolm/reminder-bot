@@ -1,8 +1,9 @@
 import express from "express"
-import { createReminder } from "../controllers/reminderController.js"
+import { readMessage } from "../middleware";
+
 
 const router = express.Router();
 
-router.post("*", createReminder);
+router.post("*", readMessage);
 
 export default router
