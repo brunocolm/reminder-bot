@@ -1,5 +1,5 @@
 import express from "express"
-import { readMessage } from "../middleware";
+import { readMessage } from "../middleware/index.js";
 
 
 const router = express.Router();
