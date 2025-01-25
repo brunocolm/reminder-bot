@@ -2,6 +2,7 @@
 import 'dotenv/config';
 import express from "express";
 import routes from "./routes/index.js";
+import { run } from './services/storing/mongodb.js';
 
 const app = express();
 app.use(express.json());
@@ -16,6 +17,10 @@ app.listen(PORT, (err: any) => {
   } else {
     console.log("Server listening on PORT", PORT);
   }
+});
+
+run().catch((error) => {
+  console.error("Failed to initialize MongoDB connection:", error);
 });
 
 export default app;

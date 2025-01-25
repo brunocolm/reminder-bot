@@ -1,5 +1,9 @@
+import { readTelegramMessage } from "../controllers/reminderController.js";
 import { getDateAndReminderWitAi } from "../services/analyze/witAi.js";
 import { sendTelegramMessage } from "../services/messaging/telegram.js";
+import { completeReminderMongoDB, createReminderMongoDB, readAllRemindersMongoDB, Reminder } from "../services/storing/mongodb.js";
+import { Request, Response } from "express";
+import { ObjectId } from "mongodb";
 
 enum ANALYZE_SERVICE {
   WIT_AI = "WIT_AI"
@@ -9,8 +13,13 @@ enum MESSAGING_SERVICE {
   TELEGRAM = "TELEGRAM"
 }
 
+enum STORING_SERVICE {
+  MONGODB = "MONGODB"
+}
+
 const analyzeService = ANALYZE_SERVICE.WIT_AI;
 const messagingService = MESSAGING_SERVICE.TELEGRAM;
+const storingService = STORING_SERVICE.MONGODB;
 
 export const getDateAndReminder = async (message: string): Promise<[string, string] | string> => {
   switch (analyzeService) {
@@ -22,6 +31,15 @@ export const getDateAndReminder = async (message: string): Promise<[string, stri
   }
 };
 
+export const readMessage = async (req: Request, res: Response): Promise<any> => {
+  switch (messagingService) {
+    case MESSAGING_SERVICE.TELEGRAM:
+      const response = readTelegramMessage(req, res);
+      return response;
+    default:
+      return null;
+  }
+};
 export const sendMessage = async (chatId: number, message: string): Promise<[string, string] | string> => {
   switch (messagingService) {
     case MESSAGING_SERVICE.TELEGRAM:
@@ -33,3 +51,32 @@ export const sendMessage = async (chatId: number, message: string): Promise<[str
 };
 
 
+export const storeReminder = async (date: string, reminder: string, chatId?: number, completed = false): Promise<boolean> => {
+  switch (storingService) {
+    case STORING_SERVICE.MONGODB:
+      const response = createReminderMongoDB({
+        date, reminder, completed, chatId
+      });
+      return response;
+    default:
+      return false;
+  }
+};
+
+export const readAllReminders = async (): Promise<Reminder[]> => {
+  switch (storingService) {
+    case STORING_SERVICE.MONGODB:
+      return readAllRemindersMongoDB()
+    default:
+      return [];
+  }
+};
+
+export const completeReminder = async (reminderId:string|ObjectId): Promise<Reminder|null> => {
+  switch (storingService) {
+    case STORING_SERVICE.MONGODB:
+      return completeReminderMongoDB(reminderId)
+    default:
+      return null;
+  }
+};

@@ -1,5 +1,5 @@
 import schedule from "node-schedule";
-import { getDateAndReminder, sendMessage } from "../middleware/index.js";
+import { getDateAndReminder, sendMessage, storeReminder } from "../middleware/index.js";
 
 interface MessageBody {
   message: {
@@ -31,43 +31,50 @@ export const validateMessageBody = (body: MessageBody): string | null => {
   return null; // Return null if validation passes
 };
 
-const parseDate = (date: string | Date) => {
+export const parseDate = (date: string | Date) => {
   return new Date(date).toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeStyle:"medium"
   });
 };
 
 const reminderCallback = (chatId: number, date: string | Date, reminder: string) => {
   const parsedDate = parseDate(date)
-  const message = `${parsedDate} Reminder!!\n${reminder}`;
+  const message = `I hear you my man:\n${parsedDate} \n${reminder}`;
   sendMessage(chatId, message)
 };
 
-const scheduleReminder = (chatId: number, ISODate: string, reminder: string): "success" | "error" => {
+const scheduleReminder = (chatId: number, ISODate: string, reminder: string): boolean => {
   const job = schedule.scheduleJob(ISODate, function () {
     reminderCallback(chatId, new Date(), reminder);
   });
 
-  if (!job) return "error";
+  if (!job) return false;
 
-  return "success";
+  return true;
 };
 
 export const processReminderMessage = async (chatId: number, userMessage: string) => {
   const [ISODate, reminder] = await getDateAndReminder(userMessage);
+  const storedReminderStatus = storeReminder(ISODate, reminder, chatId)
+  if (!storedReminderStatus) {
+    const err = `There was an error storing your reminder. Date: ${ISODate}. Reminder: ${reminder}`;
+    console.log(err);
+  }
+
   const reminderStatus = scheduleReminder(chatId, ISODate, reminder);
 
-  if (reminderStatus === "error") {
+  if (!reminderStatus) {
     const err = `There was an error generating your reminder. Date: ${ISODate}. Reminder: ${reminder}`;
     console.log(err);
     return err;
   }
 
   const date = parseDate(ISODate);
-  const botMessage = `Reminder created: ${date}\n${reminder}`;
+  const botMessage = `Reminder created:\n${date}\n${reminder}`;
 
   sendMessage(chatId, botMessage)
 };
