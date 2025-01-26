@@ -60,15 +60,23 @@ const scheduleReminder = (chatId: number, ISODate: string, reminder: string): bo
   return true;
 };
 
-export const processReminderMessage = async (chatId: number, userMessage: string) => {
+export const processReminderMessage = async (chatId: number, userMessage: string): Promise<string | undefined> => {
   console.log("Getting date and text from reminder")
   const [ISODate, reminder] = await getDateAndReminder(userMessage);
-  console.log(`Create reminder for date: ${ISODate}. ${reminder}`)
-  const storedReminderStatus = storeReminder(ISODate, reminder, chatId)
+  if (!ISODate || !reminder) {
+    const err = "Couldn't find date or reminder subject"
+    console.log(err)
+    sendMessage(chatId, err)
+    return err
+  }
+  console.log(`Creating reminder for date: ${ISODate}. ${reminder}`)
+
+  const storedReminderStatus = !!ISODate && !!reminder && storeReminder(ISODate, reminder, chatId)
   console.log(`Reminder stored: ${storedReminderStatus}`)
   if (!storedReminderStatus) {
     const err = `There was an error storing your reminder. Date: ${ISODate}. Reminder: ${reminder}`;
     console.log(err);
+    return err;
   }
 
   const reminderStatus = scheduleReminder(chatId, ISODate, reminder);

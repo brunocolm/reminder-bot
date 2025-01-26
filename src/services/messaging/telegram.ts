@@ -1,4 +1,5 @@
 export const sendTelegramMessage = async (chatId: number, message: string): Promise<string> => {
+  console.log("Sending telegram MSG to: ",chatId)
   const BASE_URL = `https://api.telegram.org/bot${process.env.TELEGRAM_API_KEY}`;
   const response = await fetch(BASE_URL + "/sendMessage", {
     method: "POST",
