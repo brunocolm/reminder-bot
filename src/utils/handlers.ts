@@ -46,7 +46,7 @@ export const parseDate = (date: string | Date) => {
 
 const reminderCallback = (chatId: number, date: string | Date, reminder: string) => {
   const parsedDate = parseDate(date)
-  const message = `I hear you my man:\n${parsedDate} \n${reminder}`;
+  const message = `Remember to do this:\n${parsedDate} \n${reminder}`;
   sendMessage(chatId, message)
 };
 

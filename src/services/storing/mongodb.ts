@@ -59,8 +59,10 @@ export const completeReminderMongoDB = async (reminderId: string | ObjectId): Pr
     const db = client.db("reminders");
     const coll = db.collection("reminders");
     try {
+        const id = typeof reminderId === "string" ? new ObjectId(reminderId) : reminderId;
+
         const result = await coll.findOneAndUpdate(
-            { _id: new ObjectId(reminderId) },
+            { _id: id },
             { $set: { completed: true } },
             { returnDocument: "after" }
         );

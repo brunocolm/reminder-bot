@@ -15,9 +15,18 @@ export const readTelegramMessage = async (req: Request, res: Response): Promise<
     if (text[0] === "/") {
       console.log("Command detected. (/)")
       const allReminders = await readAllReminders();
-      if (text.substring(1, 4) === "all") {
+      if (text.substring(1, 6) === "all *") {
         console.log("Reading all reminders")
-        const allRemindersMessage = `Your reminders are: ${allReminders.map((reminder, index) => `\n${index + 1}. ${reminder.reminder}: ${parseDate(reminder.date)}`)}`;
+        const allRemindersMessage = `Your reminders are: ${allReminders.map((reminder, index) => `\n${index + 1}. ${reminder.reminder}: ${parseDate(reminder.date)} ${reminder.completed ? "✅" : ""}`)}`;
+        console.log(allRemindersMessage)
+        sendMessage(chatId, allRemindersMessage)
+        return res.send(allReminders);
+      } else if (text.substring(1, 4) === "all") {
+        console.log("Reading all pending reminders")
+        const allRemindersMessage = `Your pending reminders are: ${allReminders
+          .filter((reminder) => !reminder.completed)
+          .map((reminder, index) => `\n${index + 1}. ${reminder.reminder}: ${parseDate(reminder.date)}`)}`;
+
         console.log(allRemindersMessage)
         sendMessage(chatId, allRemindersMessage)
         return res.send(allReminders);
@@ -25,7 +34,7 @@ export const readTelegramMessage = async (req: Request, res: Response): Promise<
       if (text[1] === "c") {
         const reminderToComplete = text.split(" ")[1];
         console.log("Completing reminder: \n", reminderToComplete)
-        const reminderId = allReminders[reminderToComplete-1]._id;
+        const reminderId = allReminders[reminderToComplete - 1]._id;
         const completedReminder = reminderId && await completeReminder(reminderId);
         const completedReminderMessage = `You just completed: ${completedReminder?.reminder}.`;
         console.log(completedReminderMessage)
