@@ -23,6 +23,7 @@ const storingService = STORING_SERVICE.MONGODB;
 
 export const getDateAndReminder = async (message: string): Promise<[string, string] | string> => {
   try {
+    console.log("Analyzing message with:", analyzeService);
     switch (analyzeService) {
       case ANALYZE_SERVICE.WIT_AI:
         const [date, reminder] = await getDateAndReminderWitAi(message);
@@ -37,6 +38,7 @@ export const getDateAndReminder = async (message: string): Promise<[string, stri
 };
 
 export const readMessage = async (req: Request, res: Response): Promise<any> => {
+  console.log("Reading message with:", messagingService);
   switch (messagingService) {
     case MESSAGING_SERVICE.TELEGRAM:
       const response = readTelegramMessage(req, res);
@@ -46,6 +48,7 @@ export const readMessage = async (req: Request, res: Response): Promise<any> => 
   }
 };
 export const sendMessage = async (chatId: number, message: string): Promise<[string, string] | string> => {
+  console.log("Sending message with:", messagingService);
   switch (messagingService) {
     case MESSAGING_SERVICE.TELEGRAM:
       const response = sendTelegramMessage(chatId, message);
@@ -58,6 +61,7 @@ export const sendMessage = async (chatId: number, message: string): Promise<[str
 
 export const storeReminder = async (date: string, reminder: string, chatId?: number, completed = false): Promise<boolean> => {
   try {
+    console.log("Storing reminder with:", storingService);
     switch (storingService) {
       case STORING_SERVICE.MONGODB:
         const response = createReminderMongoDB({
@@ -75,6 +79,7 @@ export const storeReminder = async (date: string, reminder: string, chatId?: num
 
 export const readAllReminders = async (): Promise<Reminder[]> => {
   try {
+    console.log("Reading all reminders with:", storingService);
     switch (storingService) {
       case STORING_SERVICE.MONGODB:
         return readAllRemindersMongoDB()
@@ -89,6 +94,7 @@ export const readAllReminders = async (): Promise<Reminder[]> => {
 
 export const completeReminder = async (reminderId: string | ObjectId): Promise<Reminder | null> => {
   try {
+    console.log("Completing reminder with:", storingService);
     switch (storingService) {
       case STORING_SERVICE.MONGODB:
         return completeReminderMongoDB(reminderId)
