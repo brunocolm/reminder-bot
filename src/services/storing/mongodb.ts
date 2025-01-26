@@ -59,13 +59,14 @@ export const completeReminderMongoDB = async (reminderId: string | ObjectId): Pr
     const db = client.db("reminders");
     const coll = db.collection("reminders");
     try {
+        console.log("Searching reminder..")
         const id = typeof reminderId === "string" ? new ObjectId(reminderId) : reminderId;
-
         const result = await coll.findOneAndUpdate(
             { _id: id },
             { $set: { completed: true } },
             { returnDocument: "after" }
         );
+        console.log("Query result: ", result)
 
         if (!result?.value) {
             throw new Error(`No reminder found with ID: ${reminderId}`);

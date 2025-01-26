@@ -11,7 +11,7 @@ export const readTelegramMessage = async (req: Request, res: Response): Promise<
       return res.status(400).send(validationError);
     }
     const { text, chat: { id: chatId } } = req.body.message;
-
+    console.log("Message: ", req.body.message)
     if (text[0] === "/") {
       console.log("Command detected. (/)")
       const allReminders = await readAllReminders();
@@ -33,8 +33,8 @@ export const readTelegramMessage = async (req: Request, res: Response): Promise<
       }
       if (text[1] === "c") {
         const reminderToComplete = text.split(" ")[1];
-        console.log("Completing reminder: \n", reminderToComplete)
-        const reminderId = allReminders[reminderToComplete - 1]._id;
+        const reminderId = allReminders[reminderToComplete - 1]?._id;
+        console.log(`Completing reminder: \n ${reminderToComplete} with ID: ${reminderId}`)
         const completedReminder = reminderId && await completeReminder(reminderId);
         const completedReminderMessage = `You just completed: ${completedReminder?.reminder}.`;
         console.log(completedReminderMessage)

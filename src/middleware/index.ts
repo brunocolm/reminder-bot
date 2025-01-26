@@ -39,14 +39,20 @@ export const getDateAndReminder = async (message: string): Promise<[string, stri
 
 export const readMessage = async (req: Request, res: Response): Promise<any> => {
   console.log("Reading message with:", messagingService);
-  switch (messagingService) {
-    case MESSAGING_SERVICE.TELEGRAM:
-      const response = readTelegramMessage(req, res);
-      return response;
-    default:
-      return null;
+  try {
+    switch (messagingService) {
+      case MESSAGING_SERVICE.TELEGRAM:
+        const response = readTelegramMessage(req, res);
+        return response;
+      default:
+        return null;
+    }
+  } catch (e: any) {
+    console.log("Error reading message:", e.message);
+    return res.status(500).send("Internal Server Error");
   }
 };
+
 export const sendMessage = async (chatId: number, message: string): Promise<[string, string] | string> => {
   console.log("Sending message with:", messagingService);
   switch (messagingService) {
