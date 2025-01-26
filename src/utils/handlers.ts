@@ -37,7 +37,10 @@ export const parseDate = (date: string | Date) => {
     day: "numeric",
     month: "long",
     year: "numeric",
-    timeStyle:"medium"
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: true,
   });
 };
 
