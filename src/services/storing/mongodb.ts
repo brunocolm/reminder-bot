@@ -68,13 +68,13 @@ export const completeReminderMongoDB = async (reminderId: string | ObjectId): Pr
         );
         console.log("Query result: ", result)
 
-        if (!result?.value) {
+        if (!result) {
             throw new Error(`No reminder found with ID: ${reminderId}`);
         }
 
         console.log(`Reminder with ID: ${reminderId} completed`);
 
-        return result.value as Reminder;
+        return result as Reminder;
     } catch (error) {
         console.error(`Error completing reminder with ID ${reminderId}:`, error);
         throw error;

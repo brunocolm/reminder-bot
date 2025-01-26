@@ -4,6 +4,7 @@ import { validateMessageBody, processReminderMessage, parseDate } from "../utils
 
 
 export const readTelegramMessage = async (req: Request, res: Response): Promise<any> => {
+  const errorMessage = "There was an error.. My bad!!"
   try {
     const validationError = validateMessageBody(req.body);
 
@@ -34,8 +35,20 @@ export const readTelegramMessage = async (req: Request, res: Response): Promise<
       if (text[1] === "c") {
         const reminderToComplete = text.split(" ")[1];
         const reminderId = allReminders[reminderToComplete - 1]?._id;
-        console.log(`Completing reminder: \n ${reminderToComplete} with ID: ${reminderId}`)
-        const completedReminder = reminderId && await completeReminder(reminderId);
+        console.log(`Completing reminder:\n${reminderToComplete} with ID: ${reminderId}`);
+
+        if (!reminderId) {
+          sendMessage(chatId, errorMessage)
+          return res.status(400).send("Invalid reminder ID.");
+        }
+
+        const completedReminder = await completeReminder(reminderId);
+        if (!completedReminder) {
+          console.warn(`No reminder found with ID: ${reminderId}`);
+          sendMessage(chatId, errorMessage)
+          return res.status(404).send("Reminder not found or already completed.");
+        }
+
         const completedReminderMessage = `You just completed: ${completedReminder?.reminder}.`;
         console.log(completedReminderMessage)
         sendMessage(chatId, completedReminderMessage)
@@ -46,6 +59,8 @@ export const readTelegramMessage = async (req: Request, res: Response): Promise<
       return res.send(reminderResponse);
     }
   } catch (error) {
+    const { chat: { id: chatId } } = req?.body?.message;
+    chatId && sendMessage(chatId, errorMessage)
     console.error("Error in POST request:", error);
     return res.status(500).send("Internal Server Error");
   }

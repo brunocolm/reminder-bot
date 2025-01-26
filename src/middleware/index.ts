@@ -42,7 +42,7 @@ export const readMessage = async (req: Request, res: Response): Promise<any> => 
   try {
     switch (messagingService) {
       case MESSAGING_SERVICE.TELEGRAM:
-        const response = readTelegramMessage(req, res);
+        const response = await readTelegramMessage(req, res);
         return response;
       default:
         return null;
@@ -103,7 +103,7 @@ export const completeReminder = async (reminderId: string | ObjectId): Promise<R
     console.log("Completing reminder with:", storingService);
     switch (storingService) {
       case STORING_SERVICE.MONGODB:
-        return completeReminderMongoDB(reminderId)
+        return await completeReminderMongoDB(reminderId)
       default:
         return null;
     }
