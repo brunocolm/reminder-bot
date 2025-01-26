@@ -30,9 +30,9 @@ export const getDateAndReminder = async (message: string): Promise<[string, stri
       default:
         return message;
     }
-  } catch (e:any) {
+  } catch (e: any) {
     console.log("Error getting date and reminder:", e.message);
-    throw new Error(e)
+    throw e
   }
 };
 
@@ -57,31 +57,46 @@ export const sendMessage = async (chatId: number, message: string): Promise<[str
 
 
 export const storeReminder = async (date: string, reminder: string, chatId?: number, completed = false): Promise<boolean> => {
-  switch (storingService) {
-    case STORING_SERVICE.MONGODB:
-      const response = createReminderMongoDB({
-        date, reminder, completed, chatId
-      });
-      return response;
-    default:
-      return false;
+  try {
+    switch (storingService) {
+      case STORING_SERVICE.MONGODB:
+        const response = createReminderMongoDB({
+          date, reminder, completed, chatId
+        });
+        return response;
+      default:
+        return false;
+    }
+  } catch (e: any) {
+    console.log("Error storing reminder:", e.message);
+    throw e
   }
 };
 
 export const readAllReminders = async (): Promise<Reminder[]> => {
-  switch (storingService) {
-    case STORING_SERVICE.MONGODB:
-      return readAllRemindersMongoDB()
-    default:
-      return [];
+  try {
+    switch (storingService) {
+      case STORING_SERVICE.MONGODB:
+        return readAllRemindersMongoDB()
+      default:
+        return [];
+    }
+  } catch (e: any) {
+    console.log("Error reading reminder:", e.message);
+    throw e
   }
 };
 
-export const completeReminder = async (reminderId:string|ObjectId): Promise<Reminder|null> => {
-  switch (storingService) {
-    case STORING_SERVICE.MONGODB:
-      return completeReminderMongoDB(reminderId)
-    default:
-      return null;
+export const completeReminder = async (reminderId: string | ObjectId): Promise<Reminder | null> => {
+  try {
+    switch (storingService) {
+      case STORING_SERVICE.MONGODB:
+        return completeReminderMongoDB(reminderId)
+      default:
+        return null;
+    }
+  } catch (e: any) {
+    console.log("Error completing reminder:", e.message);
+    throw e
   }
 };
