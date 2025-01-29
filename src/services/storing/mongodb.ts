@@ -1,5 +1,6 @@
 
 import { Filter, Document, MongoClient, ObjectId, ServerApiVersion } from 'mongodb';
+import { filterReminders } from '../../middleware';
 
 export interface Reminder {
     _id?: ObjectId | undefined;
@@ -70,12 +71,12 @@ export const readAllRemindersMongoDB = async (): Promise<Reminder[]> => {
 };
 
 export const filterRemindersMongoDB = async (findOptions: Filter<Document>): Promise<Reminder[]> => {
-    console.log("Searching reminders.. ", findOptions)
+    console.log("Searching reminders.. ")
     const db = client.db("reminders");
     const coll = db.collection("reminders");
     const reminders = await coll.find(findOptions).toArray();
 
-    console.log("filteredReminders: \n", reminders);
+    console.log("Filtered reminders: \n", reminders);
 
     return reminders as Reminder[];
 };
@@ -114,6 +115,10 @@ export const createMongoFilterQuery = (reminderFilter: ReminderFilter): Filter<D
         filter.createdAt = { ...filter.createdAt, $gte: reminderFilter.createdAfter };
     }
 
+    console.log("********************Query created********************")
+    console.log("Reminder query: ", reminderFilter)
+    console.log("MongoDB query: ", filter)
+    
     return filter;
 };
 export const completeReminderMongoDB = async (reminderId: string | ObjectId): Promise<Reminder> => {

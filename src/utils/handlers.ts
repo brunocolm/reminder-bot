@@ -56,17 +56,23 @@ const scheduleReminder = (chatId: number, ISODate: string, reminder: string): bo
     reminderCallback(chatId, new Date(), reminder);
   });
 
-  if (!job) return false;
+  if (!job) {
+    const err = `There was an error generating your reminder. Date: ${ISODate}. Reminder: ${reminder}`;
+    console.log(err);
+    return false
+  };
 
+  console.log(`Scheduled for ${parseDate(ISODate)}: \n-${reminder}`)
   return true;
 };
 
 export const rescheduleReminders = async (): Promise<boolean> => {
+  console.log("Rescheduling reminders...")
   const filter: ReminderFilter = {
     dateAfter: new Date().toISOString(),
     completed: false,
   }
-  
+
   const filteredReminders = await filterReminders(filter)
 
   filteredReminders.forEach(({ chatId, date, reminder }) => {
@@ -78,8 +84,9 @@ export const rescheduleReminders = async (): Promise<boolean> => {
       console.log("error rescheduling reminders")
       return false
     };
+    console.log(`Rescheduled for ${parseDate(date)}: \n-${reminder}`)
   });
-
+  console.log("Rescheduling complete!")
   return true;
 };
 
@@ -95,6 +102,13 @@ export const processReminderMessage = async (chatId: number, userMessage: string
   }
   console.log(`Creating reminder for date: ${ISODate}. ${reminder}`)
 
+  const reminderStatus = scheduleReminder(chatId, ISODate, reminder);
+  console.log(`Reminder scheduled: ${reminderStatus}`)
+  if (!reminderStatus) {
+    const err = `There was an error generating your reminder. Date: ${ISODate}. Reminder: ${reminder}`;
+    return err;
+  } 
+
   const storedReminderStatus = !!ISODate && !!reminder && storeReminder(ISODate, reminder, chatId)
   console.log(`Reminder stored: ${storedReminderStatus}`)
   if (!storedReminderStatus) {
@@ -103,13 +117,6 @@ export const processReminderMessage = async (chatId: number, userMessage: string
     return err;
   }
 
-  const reminderStatus = scheduleReminder(chatId, ISODate, reminder);
-  console.log(`Reminder scheduled: ${reminderStatus}`)
-  if (!reminderStatus) {
-    const err = `There was an error generating your reminder. Date: ${ISODate}. Reminder: ${reminder}`;
-    console.log(err);
-    return err;
-  }
 
   const date = parseDate(ISODate);
   console.log(`Parsed date: ${date}`)

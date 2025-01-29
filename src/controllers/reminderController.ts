@@ -8,7 +8,6 @@ export const readTelegramMessage = async (req: Request, res: Response): Promise<
   try {
     const validationError = validateMessageBody(req.body);
     if (validationError) {
-      const errorMessage = "There was an error.. My bad!!"
       const { chat: { id: chatId } } = req?.body?.message;
       chatId && sendMessage(chatId, errorMessage)
       console.log(validationError)
