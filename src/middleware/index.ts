@@ -1,7 +1,7 @@
 import { readTelegramMessage } from "../controllers/reminderController.js";
 import { getDateAndReminderWitAi } from "../services/analyze/witAi.js";
 import { sendTelegramMessage } from "../services/messaging/telegram.js";
-import { completeReminderMongoDB, createReminderMongoDB, readAllRemindersMongoDB, Reminder } from "../services/storing/mongodb.js";
+import { completeReminderMongoDB, createMongoFilterQuery, createReminderMongoDB, filterRemindersMongoDB, readAllRemindersMongoDB, Reminder, ReminderFilter } from "../services/storing/mongodb.js";
 import { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 
@@ -64,7 +64,6 @@ export const sendMessage = async (chatId: number, message: string): Promise<[str
   }
 };
 
-
 export const storeReminder = async (date: string, reminder: string, chatId?: number, completed = false): Promise<boolean> => {
   try {
     console.log("Storing reminder with:", storingService);
@@ -89,6 +88,22 @@ export const readAllReminders = async (): Promise<Reminder[]> => {
     switch (storingService) {
       case STORING_SERVICE.MONGODB:
         return readAllRemindersMongoDB()
+      default:
+        return [];
+    }
+  } catch (e: any) {
+    console.log("Error reading reminder:", e.message);
+    throw e
+  }
+};
+
+export const filterReminders = async (reminderFilter:ReminderFilter): Promise<Reminder[]> => {
+  try {
+    console.log("Filtering reminders with: ", storingService);
+    switch (storingService) {
+      case STORING_SERVICE.MONGODB:
+        const mongoQuery = createMongoFilterQuery(reminderFilter)
+        return filterRemindersMongoDB(mongoQuery)
       default:
         return [];
     }

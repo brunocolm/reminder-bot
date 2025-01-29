@@ -1,15 +1,29 @@
 
-import { MongoClient, ObjectId, ServerApiVersion } from 'mongodb';
+import { Filter, Document, MongoClient, ObjectId, ServerApiVersion } from 'mongodb';
 
 export interface Reminder {
     _id?: ObjectId | undefined;
     reminder: string;
     date: string;
     completed?: boolean;
-    completedDate?: boolean;
+    completedDate?: string;
     chatId?: number;
     createdAt?: string;
 }
+
+export interface ReminderFilter {
+    _id?: ObjectId[] | [];
+    reminder?: string;
+    dateBefore?: string;
+    dateAfter?: string;
+    completed?: boolean;
+    completedBefore?: string;
+    completedAfter?: string;
+    chatId?: number[];
+    createdBefore?: string;
+    createdAfter?: string;
+}
+
 
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -55,6 +69,53 @@ export const readAllRemindersMongoDB = async (): Promise<Reminder[]> => {
     return reminders as Reminder[];
 };
 
+export const filterRemindersMongoDB = async (findOptions: Filter<Document>): Promise<Reminder[]> => {
+    console.log("Searching reminders.. ", findOptions)
+    const db = client.db("reminders");
+    const coll = db.collection("reminders");
+    const reminders = await coll.find(findOptions).toArray();
+
+    console.log("filteredReminders: \n", reminders);
+
+    return reminders as Reminder[];
+};
+
+export const createMongoFilterQuery = (reminderFilter: ReminderFilter): Filter<Document> => {
+    const filter: Filter<Document> = {};
+
+    if (reminderFilter._id && reminderFilter._id.length > 0) {
+        filter._id = { $in: reminderFilter._id };
+    }
+    if (reminderFilter.reminder) {
+        filter.reminder = { $regex: reminderFilter.reminder, $options: "i" }; // Case-insensitive search
+    }
+    if (reminderFilter.dateBefore) {
+        filter.date = { ...filter.date, $lte: reminderFilter.dateBefore }; // Convert to Date
+    }
+    if (reminderFilter.dateAfter) {
+        filter.date = { ...filter.date, $gte: reminderFilter.dateAfter }; // Convert to Date
+    }
+    if (reminderFilter.completed !== undefined) {
+        filter.completed = reminderFilter.completed;
+    }
+    if (reminderFilter.completedBefore) {
+        filter.completedDate = { ...filter.completedDate, $lte: reminderFilter.completedBefore };
+    }
+    if (reminderFilter.completedAfter) {
+        filter.completedDate = { ...filter.completedDate, $gte: reminderFilter.completedAfter };
+    }
+    if (reminderFilter.chatId && reminderFilter.chatId.length > 0) {
+        filter.chatId = { $in: reminderFilter.chatId };
+    }
+    if (reminderFilter.createdBefore) {
+        filter.createdAt = { ...filter.createdAt, $lte: reminderFilter.createdBefore };
+    }
+    if (reminderFilter.createdAfter) {
+        filter.createdAt = { ...filter.createdAt, $gte: reminderFilter.createdAfter };
+    }
+
+    return filter;
+};
 export const completeReminderMongoDB = async (reminderId: string | ObjectId): Promise<Reminder> => {
     const db = client.db("reminders");
     const coll = db.collection("reminders");

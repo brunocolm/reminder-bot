@@ -1,5 +1,6 @@
 import schedule from "node-schedule";
-import { getDateAndReminder, sendMessage, storeReminder } from "../middleware/index.js";
+import { filterReminders, getDateAndReminder, sendMessage, storeReminder } from "../middleware/index.js";
+import { ReminderFilter } from "../services/storing/mongodb.js";
 
 interface MessageBody {
   message: {
@@ -59,6 +60,29 @@ const scheduleReminder = (chatId: number, ISODate: string, reminder: string): bo
 
   return true;
 };
+
+export const rescheduleReminders = async (): Promise<boolean> => {
+  const filter: ReminderFilter = {
+    dateAfter: new Date().toISOString(),
+    completed: false,
+  }
+  
+  const filteredReminders = await filterReminders(filter)
+
+  filteredReminders.forEach(({ chatId, date, reminder }) => {
+    const job = chatId && schedule.scheduleJob(new Date(date).toISOString(), function () {
+      reminderCallback(chatId, new Date(), reminder);
+    });
+
+    if (!job) {
+      console.log("error rescheduling reminders")
+      return false
+    };
+  });
+
+  return true;
+};
+
 
 export const processReminderMessage = async (chatId: number, userMessage: string): Promise<string | undefined> => {
   console.log("Getting date and text from reminder")

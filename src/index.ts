@@ -3,6 +3,7 @@ import 'dotenv/config';
 import express from "express";
 import routes from "./routes/index.js";
 import { run } from './services/storing/mongodb.js';
+import { rescheduleReminders } from './utils/handlers.js';
 
 const app = express();
 app.use(express.json());
@@ -22,5 +23,7 @@ app.listen(PORT, (err: any) => {
 run().catch((error) => {
   console.error("Failed to initialize MongoDB connection:", error);
 });
+
+rescheduleReminders()
 
 export default app;
