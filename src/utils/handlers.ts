@@ -1,6 +1,7 @@
 import schedule from "node-schedule";
 import { filterReminders, getDateAndReminder, sendMessage, storeReminder } from "../middleware/index.js";
 import { ReminderFilter } from "../services/storing/mongodb.js";
+import { Response } from "express";
 
 interface MessageBody {
   message: {
@@ -10,6 +11,15 @@ interface MessageBody {
     }
   }
 }
+
+export const sendErrorMessage = (chatId: number, error: string, res: Response, status = 400) => {
+  const errorMessage = "There was an error.. My bad!!"
+  if (chatId) {
+    sendMessage(chatId, errorMessage);
+  }
+  console.error(error);
+  return res.status(status).send(error);
+};
 
 //Validates data is valid. (e.g.: {message: {text:"Message text", chat: {id:1 }}} )
 export const validateMessageBody = (body: MessageBody): string | null => {
@@ -75,6 +85,11 @@ export const rescheduleReminders = async (): Promise<boolean> => {
 
   const filteredReminders = await filterReminders(filter)
 
+  if (!filteredReminders.length) {
+    console.log("No reminders to reschedule")
+    return true;
+  }
+
   filteredReminders.forEach(({ chatId, date, reminder }) => {
     const job = chatId && schedule.scheduleJob(new Date(date).toISOString(), function () {
       reminderCallback(chatId, new Date(), reminder);
@@ -89,7 +104,6 @@ export const rescheduleReminders = async (): Promise<boolean> => {
   console.log("Rescheduling complete!")
   return true;
 };
-
 
 export const processReminderMessage = async (chatId: number, userMessage: string): Promise<string | undefined> => {
   console.log("Getting date and text from reminder")
@@ -107,7 +121,7 @@ export const processReminderMessage = async (chatId: number, userMessage: string
   if (!reminderStatus) {
     const err = `There was an error generating your reminder. Date: ${ISODate}. Reminder: ${reminder}`;
     return err;
-  } 
+  }
 
   const storedReminderStatus = !!ISODate && !!reminder && storeReminder(ISODate, reminder, chatId)
   console.log(`Reminder stored: ${storedReminderStatus}`)
