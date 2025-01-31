@@ -33,6 +33,6 @@ export const readTelegramMessage = async (req: Request, res: Response): Promise<
   } catch (error) {
     const { chat: { id: chatId } } = req.body.message;
     const reqError = "Error in POST request"
-    return sendErrorMessage(chatId, reqError, res, 500);
+    return sendErrorMessage(chatId, reqError, res);
   }
 };

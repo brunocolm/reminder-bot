@@ -12,13 +12,13 @@ interface MessageBody {
   }
 }
 
-export const sendErrorMessage = (chatId: number, error: string, res: Response, status = 400) => {
+export const sendErrorMessage = (chatId: number, error: string, res: Response) => {
   const errorMessage = "There was an error.. My bad!!"
   if (chatId) {
     sendMessage(chatId, errorMessage);
   }
   console.error(error);
-  return res.status(status).send(error);
+  return res.send(error);
 };
 
 //Validates data is valid. (e.g.: {message: {text:"Message text", chat: {id:1 }}} )
