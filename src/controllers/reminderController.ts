@@ -42,8 +42,8 @@ export const readTelegramMessage = async (req: Request, res: Response): Promise<
         }
       case MessageType.BUTTON_RESPONSE:
         {
+          console.log("A button has been clicked: ",req.body.callback_query.message)
           const { chat: { id: chatId } } = req.body.callback_query.message;
-          console.log("Message: ", req.body.callback_query.message)
           const buttonIndex = req?.body?.callback_query?.message?.reply_markup?.inline_keyboard[0][0].text
           return handleCommand(`/c ${buttonIndex}`, chatId, res)
         }
