@@ -1,4 +1,4 @@
-import { completeReminder, filterReminders, readAllReminders, sendMessage } from "../middleware/index.js";
+import { completeReminder, createInterfaceButtons, filterReminders, readAllReminders, sendMessage } from "../middleware/index.js";
 import { Response } from "express";
 import { parseDate, sendErrorMessage } from "./handlers.js";
 
@@ -50,7 +50,9 @@ const handleCompleteCommand = async (chatId: number, res: Response, reminderInde
         const selectReminderMessage = `Select the reminder you want to complete: ${pendingReminders
             .map((reminder, index) => `\n${index + 1}. ${reminder.reminder}: ${parseDate(reminder.date)}`)}`;
         console.log(selectReminderMessage)
-        sendMessage(chatId, selectReminderMessage)
+
+        const messageButtons = createInterfaceButtons(pendingReminders.length)
+        sendMessage(chatId, selectReminderMessage, messageButtons)
         awaitingResponseUser[chatId] = "/c";
         return res.send(selectReminderMessage);
     }

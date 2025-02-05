@@ -1,35 +1,58 @@
 import { Request, Response } from "express";
 import { awaitingResponseUser, handleCommand } from "../utils/commands.js";
-import { validateMessageBody, processReminderMessage, sendErrorMessage } from "../utils/handlers.js"
+import { processReminderMessage, sendErrorMessage, getMessageType, MessageType } from "../utils/handlers.js"
 
 export const readTelegramMessage = async (req: Request, res: Response): Promise<any> => {
   try {
-    const validationError = validateMessageBody(req.body);
-    if (validationError) {
-      const { chat: { id: chatId } } = req.body.message;
-      return sendErrorMessage(chatId, validationError, res);
-    }
-    console.log("*******Message valid******")
-    const { text, chat: { id: chatId } } = req.body.message;
-    console.log("Message: ", req.body.message)
+    console.log("The request body received is:")
+    console.log(JSON.stringify(req?.body))
+    const messageType = getMessageType(req.body);
 
-    //If bot is waiting a response, this will indicate which command
-    const completionCommand = awaitingResponseUser[chatId]
+    console.log(`*******Message type:${messageType} ******`)
 
-    let processedText;
-    if (completionCommand && text[0] !== "/") {
-      processedText = `${completionCommand} ${text}`;
-    } else {
-      processedText = text
+    switch (messageType) {
+      case MessageType.INVALID:
+        {
+          const { chat: { id: chatId } } = req?.body?.message || req?.body?.callback_query?.message;
+          const errMsg = "Data is not valid"
+          return sendErrorMessage(chatId, errMsg, res);
+        }
+      case MessageType.TEXT:
+        {
+          const { text, chat: { id: chatId } } = req.body.message;
+          console.log("Message: ", req.body.message)
+
+          //If bot is waiting a response, this will indicate which command
+          const completionCommand = awaitingResponseUser[chatId]
+
+          let processedText;
+          if (completionCommand && text[0] !== "/") {
+            processedText = `${completionCommand} ${text}`;
+          } else {
+            processedText = text
+          }
+
+          if (processedText[0] === "/") {
+            console.log("Command detected: ", text)
+            return handleCommand(processedText, chatId, res)
+          } else {
+            const reminderResponse = processReminderMessage(chatId, text);
+            return res.send(reminderResponse);
+          }
+        }
+      case MessageType.BUTTON_RESPONSE:
+        {
+          const { chat: { id: chatId } } = req.body.callback_query.message;
+          console.log("Message: ", req.body.callback_query.message)
+          const buttonIndex = req?.body?.callback_query?.message?.reply_markup?.inline_keyboard[0][0].text
+          return handleCommand(`/c ${buttonIndex}`, chatId, res)
+        }
+
+      default:
+        break;
     }
 
-    if (processedText[0] === "/") {
-      console.log("Command detected: ", text)
-      return handleCommand(processedText, chatId, res)
-    } else {
-      const reminderResponse = processReminderMessage(chatId, text);
-      return res.send(reminderResponse);
-    }
+
   } catch (error) {
     const { chat: { id: chatId } } = req.body.message;
     const reqError = "Error in POST request"

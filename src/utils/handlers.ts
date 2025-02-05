@@ -3,13 +3,31 @@ import { filterReminders, getDateAndReminder, sendMessage, storeReminder } from 
 import { ReminderFilter } from "../services/storing/mongodb.js";
 import { Response } from "express";
 
-interface MessageBody {
-  message: {
-    text: string,
-    chat: {
-      id: number
-    }
+interface InlineKeyboard {
+  text: string,
+  callback_data: string
+}
+
+interface MessageData {
+  text: string,
+  chat: {
+    id: number
+  },
+  reply_markup?: {
+    inline_keyboard: InlineKeyboard[][]
   }
+
+}
+interface MessageBody {
+  message?: MessageData,
+  callback_query?: {
+    message?: MessageData
+  }
+}
+export enum MessageType {
+  TEXT = "text",
+  BUTTON_RESPONSE = "button_response",
+  INVALID = "invalid"
 }
 
 export const sendErrorMessage = (chatId: number, error: string, res: Response) => {
@@ -22,24 +40,34 @@ export const sendErrorMessage = (chatId: number, error: string, res: Response) =
 };
 
 //Validates data is valid. (e.g.: {message: {text:"Message text", chat: {id:1 }}} )
-export const validateMessageBody = (body: MessageBody): string | null => {
+const validateMessageBody = (body: MessageBody): MessageType | undefined => {
   if (!body.message) {
-    return "Bad Request: Missing message object";
+    return MessageType.INVALID
   }
 
   const { text, chat } = body.message;
 
-  if (!text) {
-    return "Bad Request: Missing text field";
-  }
-  if (!chat) {
-    return "Bad Request: Missing chat object";
-  }
-  if (!chat.id) {
-    return "Bad Request: Missing chat id";
+  if (!text || !chat || !chat.id) return MessageType.INVALID;
+
+  return
+};
+const validateButtonCallback = (callbackQuery: MessageBody): MessageType | undefined => {
+  const messageType = validateMessageBody(callbackQuery);
+  if (messageType) return messageType;
+
+  if (!callbackQuery?.message?.reply_markup) return MessageType.INVALID;
+  
+  return
+};
+
+export const getMessageType = (body: MessageBody): MessageType => {
+  if (body?.callback_query) {
+    return validateButtonCallback(body.callback_query) || MessageType.BUTTON_RESPONSE
+  } else if (body?.message) {
+    return validateMessageBody(body) || MessageType.TEXT
   }
 
-  return null; // Return null if validation passes
+  return MessageType.INVALID
 };
 
 export const parseDate = (date: string | Date) => {

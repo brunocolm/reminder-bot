@@ -1,6 +1,6 @@
 import { readTelegramMessage } from "../controllers/reminderController.js";
 import { getDateAndReminderWitAi } from "../services/analyze/witAi.js";
-import { sendTelegramMessage } from "../services/messaging/telegram.js";
+import { createTelegramInterfaceButtons, InlineKeyboard, sendTelegramMessage } from "../services/messaging/telegram.js";
 import { completeReminderMongoDB, createMongoFilterQuery, createReminderMongoDB, filterRemindersMongoDB, readAllRemindersMongoDB, Reminder, ReminderFilter } from "../services/storing/mongodb.js";
 import { Request, Response } from "express";
 import { ObjectId } from "mongodb";
@@ -53,16 +53,29 @@ export const readMessage = async (req: Request, res: Response): Promise<any> => 
   }
 };
 
-export const sendMessage = async (chatId: number, message: string): Promise<[string, string] | string> => {
+export const sendMessage = async (chatId: number, message: string, buttons?: InlineKeyboard[]): Promise<[string, string] | string> => {
   console.log("Sending message with:", messagingService);
   switch (messagingService) {
     case MESSAGING_SERVICE.TELEGRAM:
-      const response = sendTelegramMessage(chatId, message);
+      const response = sendTelegramMessage(chatId, message, buttons);
       return response;
     default:
       return message;
   }
 };
+
+export const createInterfaceButtons = (numberOfButtons: number): InlineKeyboard[] => {
+  console.log("Creating interface buttons for:", messagingService);
+  switch (messagingService) {
+    case MESSAGING_SERVICE.TELEGRAM:
+      const response = createTelegramInterfaceButtons(numberOfButtons);
+      return response;
+    default:
+      return []
+  }
+};
+
+
 
 export const storeReminder = async (date: string, reminder: string, chatId?: number, completed = false): Promise<boolean> => {
   try {
@@ -97,7 +110,7 @@ export const readAllReminders = async (): Promise<Reminder[]> => {
   }
 };
 
-export const filterReminders = async (reminderFilter:ReminderFilter): Promise<Reminder[]> => {
+export const filterReminders = async (reminderFilter: ReminderFilter): Promise<Reminder[]> => {
   try {
     console.log("Filtering reminders with: ", storingService);
     switch (storingService) {
