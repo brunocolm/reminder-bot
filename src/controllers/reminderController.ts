@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { removeTelegramInterfaceButtonsFromMessage } from "../services/messaging/telegram.js";
 import { awaitingResponseUser, handleCommand } from "../utils/commands.js";
 import { processReminderMessage, sendErrorMessage, getMessageType, MessageType } from "../utils/handlers.js"
 
@@ -42,9 +43,10 @@ export const readTelegramMessage = async (req: Request, res: Response): Promise<
         }
       case MessageType.BUTTON_RESPONSE:
         {
-          console.log("A button has been clicked: ",req.body.callback_query.message)
-          const { chat: { id: chatId } } = req.body.callback_query.message;
-          const buttonIndex = req?.body?.callback_query?.message?.reply_markup?.inline_keyboard[0][0].text
+          console.log("A button has been clicked: ", req.body.callback_query)
+          const { message_id, chat: { id: chatId } } = req.body.callback_query.message;
+          const buttonIndex = req?.body?.callback_query?.data
+          await removeTelegramInterfaceButtonsFromMessage(chatId, message_id);
           return handleCommand(`/c ${buttonIndex}`, chatId, res)
         }
 
@@ -54,8 +56,8 @@ export const readTelegramMessage = async (req: Request, res: Response): Promise<
 
 
   } catch (error) {
-    const { chat: { id: chatId } } = req.body.message;
     const reqError = "Error in POST request"
+    const { chat: { id: chatId } } = req?.body?.message || req?.body?.callback_query?.message;
     return sendErrorMessage(chatId, reqError, res);
   }
 };

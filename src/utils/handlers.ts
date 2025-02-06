@@ -21,7 +21,8 @@ interface MessageData {
 interface MessageBody {
   message?: MessageData,
   callback_query?: {
-    message?: MessageData
+    message?: MessageData,
+    data?: string
   }
 }
 export enum MessageType {
