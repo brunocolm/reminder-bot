@@ -2,6 +2,7 @@
 import 'dotenv/config';
 import express from "express";
 import routes from "./routes/index.js";
+import { connectToCalendarOAuth } from './services/calendar/googleCalendar.js';
 import { run } from './services/storing/mongodb.js';
 import { rescheduleReminders } from './utils/handlers.js';
 
@@ -25,5 +26,6 @@ run().catch((error) => {
 });
 
 rescheduleReminders()
+connectToCalendarOAuth()
 
 export default app;
