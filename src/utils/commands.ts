@@ -1,8 +1,8 @@
-import { completeReminder, createInterfaceButtons, filterReminders, readAllReminders, sendMessage } from "../middleware/index.js";
+import { completeReminder, createInterfaceButtons, filterReminders, getCalendarEvents, readAllReminders, sendMessage } from "../middleware/index.js";
 import { Response } from "express";
 import { parseDate, sendErrorMessage } from "./handlers.js";
 
-export type Command = "/start" | "/s" | "/all" | "/complete" | "/c";
+export type Command = "/start" | "/s" | "/all" | "/complete" | "/c" | "/ge" | "/get_events";
 export const awaitingResponseUser: Record<number | string, Command> = {};
 
 const handleStartCommand = async (chatId: number, res: Response): Promise<any> => {
@@ -36,6 +36,18 @@ const handleAllCommand = async (chatId: number, res: Response, param?: string): 
     } else {
         return handleReadPendingCommand(chatId, res)
     }
+}
+
+const handleGetCalendarEvents = async (chatId: number, res: Response, param?: string): Promise<any> => {
+    const allEvents = await getCalendarEvents(chatId)
+
+    if (allEvents?.length) {
+        const completedReminderMessage = `Your events are: ${allEvents}.`;
+        console.log(completedReminderMessage)
+        sendMessage(chatId, completedReminderMessage)
+        return res.send(allEvents);
+    }
+    return res.send("No events");
 }
 
 const handleCompleteCommand = async (chatId: number, res: Response, reminderIndexToComplete?: number | string): Promise<any> => {
@@ -99,6 +111,9 @@ export const handleCommand = async (commandInput: string, chatId: number, res: R
             return handleCompleteCommand(chatId, res, param)
         case "/all":
             return handleAllCommand(chatId, res, param)
+        case "/ge":
+        case "/get_events":
+            return handleGetCalendarEvents(chatId, res, param)
         default:
             const err = `Command doesn't exist: ${commandInput}`
             return sendErrorMessage(chatId, err, res);

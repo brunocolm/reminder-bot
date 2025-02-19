@@ -4,6 +4,7 @@ import { createTelegramInterfaceButtons, InlineKeyboard, sendTelegramMessage } f
 import { completeReminderMongoDB, createMongoFilterQuery, createReminderMongoDB, filterRemindersMongoDB, readAllRemindersMongoDB, Reminder, ReminderFilter } from "../services/storing/mongodb.js";
 import { Request, Response } from "express";
 import { ObjectId } from "mongodb";
+import { getGoogleCalendarEvents,Event } from "../services/calendar/googleCalendar.js";
 
 enum ANALYZE_SERVICE {
   WIT_AI = "WIT_AI"
@@ -16,10 +17,14 @@ enum MESSAGING_SERVICE {
 enum STORING_SERVICE {
   MONGODB = "MONGODB"
 }
+enum CALENDAR_SERVICE {
+  GOOGLE_API = "GOOGLE_API"
+}
 
 const analyzeService = ANALYZE_SERVICE.WIT_AI;
 const messagingService = MESSAGING_SERVICE.TELEGRAM;
 const storingService = STORING_SERVICE.MONGODB;
+const calendarService = CALENDAR_SERVICE.GOOGLE_API;
 
 export const getDateAndReminder = async (message: string): Promise<[string, string] | string> => {
   try {
@@ -74,8 +79,6 @@ export const createInterfaceButtons = (numberOfButtons: number): InlineKeyboard[
       return []
   }
 };
-
-
 
 export const storeReminder = async (date: string, reminder: string, chatId?: number, completed = false): Promise<boolean> => {
   try {
@@ -137,6 +140,21 @@ export const completeReminder = async (reminderId: string | ObjectId): Promise<R
     }
   } catch (e: any) {
     console.log("Error completing reminder:", e.message);
+    throw e
+  }
+};
+
+export const getCalendarEvents = async (chatId:number): Promise<Event[]|undefined > => {
+  try {
+    console.log("Getting calendar events from:", calendarService);
+    switch (calendarService) {
+      case CALENDAR_SERVICE.GOOGLE_API:
+        return await getGoogleCalendarEvents(chatId)
+      default:
+        return undefined;
+    }
+  } catch (e: any) {
+    console.log("Error getting calendar events:", e.message);
     throw e
   }
 };

@@ -3,6 +3,11 @@ import { google } from 'googleapis';
 import { sendMessage } from '../../middleware/index.js';
 import { Request, Response } from "express";
 
+export interface Event {
+    date: Date,
+    event: string
+}
+
 const oauth2Client = new google.auth.OAuth2(
     process.env.YOUR_CLIENT_ID,
     process.env.YOUR_CLIENT_SECRET,
@@ -13,7 +18,7 @@ const scopes = [
     'https://www.googleapis.com/auth/calendar'
 ];
 
-export const connectToCalendarOAuth = async (chatId?: number): Promise<any> => {
+export const connectToCalendarOAuth = async (): Promise<any> => {
     const url = oauth2Client.generateAuthUrl({
         // 'online' (default) or 'offline' (gets refresh_token)
         access_type: 'offline',
@@ -21,10 +26,6 @@ export const connectToCalendarOAuth = async (chatId?: number): Promise<any> => {
         // If you only need one scope, you can pass it as a string
         scope: scopes
     });
-    chatId && sendMessage(chatId, url)
-    console.log("****------URL------****")
-    console.log(await url)
-    console.log("****------URL------****")
     return url
 }
 
@@ -74,4 +75,38 @@ export const addCalendarAuth = async (req: Request, res: Response): Promise<any>
         res.send('Error');
         return;
     })
+}
+
+export const getGoogleCalendarEvents = async (chatId: number, maxResults = 15): Promise<Event[] | undefined> => {
+    const calendarId = "en.spain#holiday@group.v.calendar.google.com"
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    console.log("Google Calendar: ", calendar)
+    if (!calendar) {
+        console.log("No calendar found.")
+        const OAuthURL = await connectToCalendarOAuth()
+        const connectMessage = `To get your events you gotta sign in first: ${OAuthURL}`
+
+        sendMessage(chatId, connectMessage)
+        return;
+    }
+
+    let events;
+    console.log("Listing calendar events...")
+
+
+    await calendar.events.list({ calendarId, timeMin: (new Date()).toISOString(), maxResults, singleEvents: true, orderBy: "startTime" }, (err, response) => {
+        if (err) {
+            console.error('error fetching events', err);
+            return;
+        }
+        events = response?.data?.items;
+
+        console.log("Events callback:")
+        console.log(JSON.stringify(events))
+        console.log("------------------------------")
+    });
+    console.log("Events variable:")
+    console.log(JSON.stringify(events))
+    console.log("------------------------------")
+    return events
 }
