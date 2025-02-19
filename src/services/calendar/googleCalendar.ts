@@ -81,22 +81,18 @@ export const getGoogleCalendarEvents = async (chatId: number, maxResults = 15): 
     const calendarId = "en.spain#holiday@group.v.calendar.google.com"
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
     console.log("Google Calendar: ", calendar)
-    if (!calendar) {
-        console.log("No calendar found.")
-        const OAuthURL = await connectToCalendarOAuth()
-        const connectMessage = `To get your events you gotta sign in first: ${OAuthURL}`
-
-        sendMessage(chatId, connectMessage)
-        return;
-    }
 
     let events;
     console.log("Listing calendar events...")
 
 
-    await calendar.events.list({ calendarId, timeMin: (new Date()).toISOString(), maxResults, singleEvents: true, orderBy: "startTime" }, (err, response) => {
+    await calendar.events.list({ calendarId, timeMin: (new Date()).toISOString(), maxResults, singleEvents: true, orderBy: "startTime" }, async (err, response) => {
         if (err) {
-            console.error('error fetching events', err);
+            console.log("Couldn't list events: ", err);
+            const OAuthURL = await connectToCalendarOAuth()
+            const connectMessage = `To get your events you gotta sign in first: ${OAuthURL}`
+
+            sendMessage(chatId, connectMessage)
             return;
         }
         events = response?.data?.items;
@@ -105,8 +101,6 @@ export const getGoogleCalendarEvents = async (chatId: number, maxResults = 15): 
         console.log(JSON.stringify(events))
         console.log("------------------------------")
     });
-    console.log("Events variable:")
-    console.log(JSON.stringify(events))
-    console.log("------------------------------")
+
     return events
 }
